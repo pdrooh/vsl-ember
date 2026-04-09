@@ -24,8 +24,10 @@
 .DS_Store
 *.pem
 
-# Vídeos VSL (arquivos grandes — use CDN ou NEXT_PUBLIC_VSL_URL em produção)
-*.mp4
+# Vídeos na raiz (cópias locais; o repo usa public/videos/*.mp4 via Git LFS)
+VSL 01 - EMBER.mp4
+VSL 02 - EMBER.mp4
+VSL 03 - EMBER.mp4
 
 # debug
 npm-debug.log*
