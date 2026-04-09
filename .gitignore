@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# Vídeos VSL (arquivos grandes — use CDN ou NEXT_PUBLIC_VSL_URL em produção)
+*.mp4
+
 # debug
 npm-debug.log*
 yarn-debug.log*
