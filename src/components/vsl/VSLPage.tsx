@@ -13,8 +13,10 @@ import { PesoEspiritual } from "./blocks/PesoEspiritual";
 import { Urgencia } from "./blocks/Urgencia";
 import { Final } from "./blocks/Final";
 
+const DEFAULT_VSL_URL = "https://youtu.be/GPJVJnbx0yY";
+
 const VIDEO_SRC =
-  process.env.NEXT_PUBLIC_VSL_URL?.trim() || "/videos/vsl-01.mp4";
+  process.env.NEXT_PUBLIC_VSL_URL?.trim() || DEFAULT_VSL_URL;
 
 export function VSLPage() {
   const {

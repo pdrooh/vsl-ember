@@ -33,8 +33,12 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       className={`${playfair.variable} ${dmSans.variable} h-full scroll-smooth antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-[#0a0a0a] font-sans text-white">
+      <body
+        className="min-h-full bg-[#0a0a0a] font-sans text-white"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

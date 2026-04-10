@@ -1,11 +1,29 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
-import { extractYoutubeVideoId } from "@/lib/youtube";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { extractYoutubeVideoId, loadYoutubeIframeApi } from "@/lib/youtube";
 import { trackEvent } from "@/lib/track";
-import { YoutubeVideoPlayer } from "./YoutubeVideoPlayer";
 
 const SKIP_GUARD_SEC = 0.85;
+
+/** YT.PlayerState */
+const YT_ENDED = 0;
+const YT_PLAYING = 1;
+const YT_PAUSED = 2;
+const YT_BUFFERING = 3;
+
+type YtPlayer = {
+  playVideo: () => void;
+  pauseVideo: () => void;
+  mute: () => void;
+  unMute: () => void;
+  isMuted: () => boolean;
+  getCurrentTime: () => number;
+  getDuration: () => number;
+  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
+  getPlayerState: () => number;
+  destroy: () => void;
+};
 
 function formatTime(totalSeconds: number): string {
   if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "0:00";
@@ -14,49 +32,66 @@ function formatTime(totalSeconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-type VideoPlayerProps = {
+function emitVideoEvent(
+  currentTime: number,
+  duration: number,
+  handler: React.ReactEventHandler<HTMLVideoElement> | undefined
+) {
+  if (!handler) return;
+  const fake = { currentTime, duration } as HTMLVideoElement;
+  handler({
+    currentTarget: fake,
+    target: fake,
+  } as unknown as React.SyntheticEvent<HTMLVideoElement>);
+}
+
+type YoutubeVideoPlayerProps = {
   src: string;
-  poster?: string;
   onTimeUpdate: React.ReactEventHandler<HTMLVideoElement>;
   onLoadedMetadata: React.ReactEventHandler<HTMLVideoElement>;
   onEnded?: React.ReactEventHandler<HTMLVideoElement>;
 };
 
-function emitVideoEvent(
-  video: HTMLVideoElement,
-  handler: React.ReactEventHandler<HTMLVideoElement> | undefined
-) {
-  if (!handler) return;
-  handler({
-    currentTarget: video,
-    target: video,
-  } as unknown as React.SyntheticEvent<HTMLVideoElement>);
-}
-
-function Html5VideoPlayer({
+export function YoutubeVideoPlayer({
   src,
-  poster,
   onTimeUpdate,
   onLoadedMetadata,
   onEnded,
-}: VideoPlayerProps) {
+}: YoutubeVideoPlayerProps) {
+  const videoId = useMemo(() => extractYoutubeVideoId(src), [src]);
+  const reactId = useId();
+  const playerDomId = useMemo(
+    () => `ytp-${reactId.replace(/:/g, "")}`,
+    [reactId]
+  );
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<YtPlayer | null>(null);
   const playedRef = useRef(false);
   const furthestRef = useRef(0);
+  const durationRef = useRef(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
   const [displayTime, setDisplayTime] = useState(0);
   const [displayDuration, setDisplayDuration] = useState(0);
   const [fsActive, setFsActive] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  const clampToFurthest = useCallback((v: HTMLVideoElement) => {
-    const t = v.currentTime;
+  const stopPoll = useCallback(() => {
+    if (pollRef.current != null) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const clampToFurthest = useCallback((player: YtPlayer) => {
+    let t = player.getCurrentTime();
     const cap = furthestRef.current;
     if (t > cap + SKIP_GUARD_SEC) {
-      v.currentTime = cap;
-      return v.currentTime;
+      player.seekTo(cap, true);
+      t = cap;
     }
     furthestRef.current = Math.max(furthestRef.current, t);
     return t;
@@ -65,11 +100,134 @@ function Html5VideoPlayer({
   useEffect(() => {
     furthestRef.current = 0;
     playedRef.current = false;
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = true;
-    void v.play().catch(() => setPlaying(false));
-  }, [src]);
+    durationRef.current = 0;
+    setDisplayTime(0);
+    setDisplayDuration(0);
+    setApiError(null);
+    stopPoll();
+    playerRef.current = null;
+
+    if (!videoId) {
+      setApiError("URL do YouTube inválida");
+      return;
+    }
+
+    let cancelled = false;
+    let created: YtPlayer | null = null;
+
+    void (async () => {
+      try {
+        await loadYoutubeIframeApi();
+        if (cancelled) return;
+
+        const w = window as Window & {
+          YT: {
+            Player: new (
+              id: string,
+              options: {
+                videoId: string;
+                playerVars?: Record<string, string | number>;
+                events?: {
+                  onReady?: (e: { target: YtPlayer }) => void;
+                  onStateChange?: (e: { data: number; target: YtPlayer }) => void;
+                };
+              }
+            ) => YtPlayer;
+          };
+        };
+
+        created = new w.YT.Player(playerDomId, {
+          videoId,
+          playerVars: {
+            autoplay: 1,
+            mute: 1,
+            playsinline: 1,
+            controls: 0,
+            fs: 0,
+            modestbranding: 1,
+            rel: 0,
+            enablejsapi: 1,
+            origin: window.location.origin,
+          },
+          events: {
+            onReady: (e) => {
+              if (cancelled) return;
+              const p = e.target;
+              playerRef.current = p;
+              p.mute();
+              const d = p.getDuration();
+              if (Number.isFinite(d) && d > 0) {
+                durationRef.current = d;
+                setDisplayDuration(d);
+                emitVideoEvent(0, d, onLoadedMetadata);
+              }
+              void p.playVideo();
+              const tick = () => {
+                if (cancelled || !playerRef.current) return;
+                const pl = playerRef.current;
+                const dur = pl.getDuration();
+                if (Number.isFinite(dur) && dur > 0 && dur !== durationRef.current) {
+                  durationRef.current = dur;
+                  setDisplayDuration(dur);
+                }
+                const t = clampToFurthest(pl);
+                setDisplayTime(t);
+                const effD = durationRef.current || dur;
+                emitVideoEvent(t, effD, onTimeUpdate);
+              };
+              tick();
+              pollRef.current = setInterval(tick, 200);
+            },
+            onStateChange: (e) => {
+              if (cancelled) return;
+              const p = e.target;
+              const st = e.data;
+              if (st === YT_PLAYING || st === YT_BUFFERING) {
+                setPlaying(true);
+                if (!playedRef.current) {
+                  playedRef.current = true;
+                  trackEvent("video_start");
+                }
+              } else if (st === YT_PAUSED) {
+                setPlaying(false);
+              } else if (st === YT_ENDED) {
+                setPlaying(false);
+                const d = durationRef.current || p.getDuration();
+                furthestRef.current = Math.max(
+                  furthestRef.current,
+                  Number.isFinite(d) ? d : p.getCurrentTime()
+                );
+                emitVideoEvent(p.getCurrentTime(), d, onEnded);
+              }
+            },
+          },
+        });
+        if (cancelled) {
+          created.destroy();
+          created = null;
+        }
+      } catch {
+        if (!cancelled) setApiError("Não foi possível carregar o YouTube");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      stopPoll();
+      created?.destroy();
+      created = null;
+      playerRef.current = null;
+    };
+  }, [
+    videoId,
+    playerDomId,
+    src,
+    onTimeUpdate,
+    onLoadedMetadata,
+    onEnded,
+    clampToFurthest,
+    stopPoll,
+  ]);
 
   useEffect(() => {
     const onFsChange = () => {
@@ -80,45 +238,30 @@ function Html5VideoPlayer({
   }, []);
 
   const togglePlay = useCallback(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) void v.play();
-    else v.pause();
+    const p = playerRef.current;
+    if (!p) return;
+    const st = p.getPlayerState();
+    if (st === YT_PLAYING || st === YT_BUFFERING) p.pauseVideo();
+    else p.playVideo();
   }, []);
 
   const toggleMute = useCallback(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = !v.muted;
-    setMuted(v.muted);
+    const p = playerRef.current;
+    if (!p) return;
+    if (p.isMuted()) {
+      p.unMute();
+      setMuted(false);
+    } else {
+      p.mute();
+      setMuted(true);
+    }
   }, []);
 
   const toggleFullscreen = useCallback(() => {
     const wrap = containerRef.current;
-    const v = videoRef.current;
-    if (!wrap || !v) return;
-
-    const exit = () => {
-      if (document.fullscreenElement) void document.exitFullscreen?.();
-    };
-
-    const enter = async () => {
-      try {
-        if (wrap.requestFullscreen) {
-          await wrap.requestFullscreen();
-          return;
-        }
-      } catch {
-        /* fall through */
-      }
-      const anyV = v as HTMLVideoElement & {
-        webkitEnterFullscreen?: () => void;
-      };
-      anyV.webkitEnterFullscreen?.();
-    };
-
-    if (document.fullscreenElement) exit();
-    else void enter();
+    if (!wrap) return;
+    if (document.fullscreenElement) void document.exitFullscreen?.();
+    else void wrap.requestFullscreen?.();
   }, []);
 
   const blockSeekKeys = useCallback((e: React.KeyboardEvent) => {
@@ -136,6 +279,14 @@ function Html5VideoPlayer({
     }
   }, []);
 
+  if (!videoId) {
+    return (
+      <div className="rounded-[2rem] border border-white/10 bg-black/60 p-8 text-center text-white/70">
+        {apiError ?? "URL do YouTube inválida"}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -146,74 +297,15 @@ function Html5VideoPlayer({
       onKeyDown={blockSeekKeys}
     >
       <div className="aspect-video w-full">
-        <video
-          ref={videoRef}
-          className="h-full w-full object-contain outline-none"
-          src={src}
-          poster={poster}
-          playsInline
-          muted={muted}
-          autoPlay
-          preload="auto"
-          controls={false}
-          disablePictureInPicture
-          tabIndex={-1}
-          onContextMenu={(e) => e.preventDefault()}
-          onPlay={() => {
-            setPlaying(true);
-            if (!playedRef.current) {
-              playedRef.current = true;
-              trackEvent("video_start");
-            }
-          }}
-          onPause={() => setPlaying(false)}
-          onLoadedMetadata={(e) => {
-            const v = e.currentTarget;
-            v.playbackRate = 1;
-            furthestRef.current = 0;
-            setDisplayDuration(
-              Number.isFinite(v.duration) && v.duration > 0 ? v.duration : 0
-            );
-            emitVideoEvent(v, onLoadedMetadata);
-          }}
-          onRateChange={(e) => {
-            const v = e.currentTarget;
-            if (v.playbackRate !== 1) v.playbackRate = 1;
-          }}
-          onSeeking={(e) => {
-            const v = e.currentTarget;
-            if (v.currentTime > furthestRef.current + SKIP_GUARD_SEC) {
-              v.currentTime = furthestRef.current;
-            }
-          }}
-          onSeeked={(e) => {
-            const v = e.currentTarget;
-            if (v.currentTime > furthestRef.current + 0.05) {
-              v.currentTime = furthestRef.current;
-            }
-            clampToFurthest(v);
-            setDisplayTime(v.currentTime);
-            emitVideoEvent(v, onTimeUpdate);
-          }}
-          onTimeUpdate={(e) => {
-            const v = e.currentTarget;
-            clampToFurthest(v);
-            setDisplayTime(v.currentTime);
-            emitVideoEvent(v, onTimeUpdate);
-          }}
-          onEnded={(e) => {
-            const v = e.currentTarget;
-            furthestRef.current = Math.max(
-              furthestRef.current,
-              Number.isFinite(v.duration) ? v.duration : v.currentTime
-            );
-            setPlaying(false);
-            emitVideoEvent(v, onEnded);
-          }}
-        />
+        {apiError ? (
+          <div className="flex h-full items-center justify-center bg-black/80 text-white/75">
+            {apiError}
+          </div>
+        ) : (
+          <div id={playerDomId} className="h-full w-full [&_iframe]:h-full [&_iframe]:w-full" />
+        )}
       </div>
 
-      {/* Bloqueia interação direta com o vídeo (sem barra de progresso nativa / arrastar) */}
       <div
         className="absolute inset-0 z-[1] cursor-default bg-transparent"
         aria-hidden
@@ -341,18 +433,4 @@ function Html5VideoPlayer({
       </div>
     </div>
   );
-}
-
-export function VideoPlayer(props: VideoPlayerProps) {
-  if (extractYoutubeVideoId(props.src)) {
-    return (
-      <YoutubeVideoPlayer
-        src={props.src}
-        onTimeUpdate={props.onTimeUpdate}
-        onLoadedMetadata={props.onLoadedMetadata}
-        onEnded={props.onEnded}
-      />
-    );
-  }
-  return <Html5VideoPlayer {...props} />;
 }
