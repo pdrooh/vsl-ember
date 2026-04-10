@@ -7,16 +7,34 @@ import { trackEvent } from "@/lib/track";
 const WHATSAPP_GROUP_URL =
   "https://chat.whatsapp.com/JPg3WCTxE70L3gWJ3Lwf06?mode=gi_t";
 
-export function LeadForm() {
-  const [status, setStatus] = useState<"idle" | "sent">("idle");
+const SHEET_MONKEY_FORM_URL =
+  "https://api.sheetmonkey.io/form/51HzKw2qrQHXUEvKJGGAUH";
 
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+export function LeadForm() {
+  const [status, setStatus] = useState<"idle" | "submitting" | "sent">("idle");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    trackEvent("lead_submit", {
-      nome: String(fd.get("nome") ?? "").slice(0, 80),
-    });
-    setStatus("sent");
+    setSubmitError(null);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    setStatus("submitting");
+    try {
+      const res = await fetch(SHEET_MONKEY_FORM_URL, {
+        method: "POST",
+        body: fd,
+        mode: "cors",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      trackEvent("lead_submit", {
+        nome: String(fd.get("nome") ?? "").slice(0, 80),
+      });
+      setStatus("sent");
+    } catch {
+      setStatus("idle");
+      setSubmitError("Não foi possível enviar. Verifique a conexão e tente de novo.");
+    }
   };
 
   return (
@@ -67,6 +85,14 @@ export function LeadForm() {
         </div>
       ) : (
         <form className="mt-8 flex flex-col gap-4" onSubmit={onSubmit}>
+          {submitError ? (
+            <p
+              className="rounded-2xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-100"
+              role="alert"
+            >
+              {submitError}
+            </p>
+          ) : null}
           <label className="flex flex-col gap-2 text-sm text-white/70">
             Nome
             <input
@@ -101,9 +127,10 @@ export function LeadForm() {
           </label>
           <button
             type="submit"
-            className="mt-2 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-amber-700 via-[#c1693a] to-rose-600 px-8 py-4 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-8px_rgba(193,105,58,0.45)] transition hover:brightness-110 active:scale-[0.98]"
+            disabled={status === "submitting"}
+            className="mt-2 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-amber-700 via-[#c1693a] to-rose-600 px-8 py-4 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-8px_rgba(193,105,58,0.45)] transition hover:brightness-110 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-55"
           >
-            Quero ser avisada
+            {status === "submitting" ? "Enviando…" : "Quero ser avisada"}
           </button>
         </form>
       )}
