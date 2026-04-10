@@ -6,7 +6,7 @@ type CTAButtonProps = {
   children: React.ReactNode;
   variant?: "primary" | "secondary";
   label: string;
-  /** Só exibe o botão quando o vídeo terminou e o cadastro foi liberado */
+  /** Só exibe o botão quando o cadastro foi liberado (ex.: após 1:40 na VSL) */
   liberado?: boolean;
 };
 
@@ -30,7 +30,7 @@ export function CTAButton({
   };
 
   const base =
-    "inline-flex w-full max-w-md items-center justify-center gap-2 rounded-full px-8 py-4 text-center text-sm font-semibold uppercase tracking-[0.12em] transition-transform active:scale-[0.98] sm:w-auto sm:min-w-[280px]";
+    "inline-flex w-full max-w-md items-center justify-center gap-2 whitespace-normal rounded-full px-6 py-4 text-center text-sm font-semibold uppercase leading-snug tracking-[0.12em] transition-transform active:scale-[0.98] sm:w-auto sm:min-w-[280px] sm:px-8";
 
   const styles =
     variant === "primary"

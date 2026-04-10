@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
+  REVEAL_ALL_AT_SEC,
   REVEAL_STEPS,
   type RevealBlockId,
 } from "@/constants/revealTimeline";
@@ -11,18 +12,21 @@ export function useVideoProgress() {
   const [currentTime, setCurrentTime] = useState(0);
   const [peakTime, setPeakTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [cadastroLiberado, setCadastroLiberado] = useState(false);
   const milestonesRef = useRef({ q25: false, q50: false });
 
-  const revealedIds = useMemo(() => {
+  const revealThreshold = useMemo(() => {
     if (!duration || !Number.isFinite(duration) || duration <= 0) {
-      return [] as RevealBlockId[];
+      return REVEAL_ALL_AT_SEC;
     }
-    const t = peakTime;
-    return REVEAL_STEPS.filter((s) => t >= s.fraction * duration).map(
-      (s) => s.id
-    ) as RevealBlockId[];
-  }, [peakTime, duration]);
+    return Math.min(REVEAL_ALL_AT_SEC, duration);
+  }, [duration]);
+
+  const cadastroLiberado = peakTime >= revealThreshold;
+
+  const revealedIds = useMemo(() => {
+    if (peakTime < revealThreshold) return [] as RevealBlockId[];
+    return REVEAL_STEPS.map((s) => s.id) as RevealBlockId[];
+  }, [peakTime, revealThreshold]);
 
   const progressPct =
     duration > 0 && Number.isFinite(duration)
@@ -60,7 +64,6 @@ export function useVideoProgress() {
   );
 
   const handleVideoEnded = useCallback(() => {
-    setCadastroLiberado(true);
     trackEvent("video_complete");
   }, []);
 

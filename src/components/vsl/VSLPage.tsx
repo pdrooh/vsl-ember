@@ -8,7 +8,6 @@ import { CadastroGate } from "./CadastroGate";
 import { Abertura } from "./blocks/Abertura";
 import { Identificacao } from "./blocks/Identificacao";
 import { Atmosfera } from "./blocks/Atmosfera";
-import { Proposito } from "./blocks/Proposito";
 import { PesoEspiritual } from "./blocks/PesoEspiritual";
 import { Urgencia } from "./blocks/Urgencia";
 import { Final } from "./blocks/Final";
@@ -28,18 +27,6 @@ export function VSLPage() {
     cadastroLiberado,
   } = useVideoProgress();
 
-  const blocosVisiveis = [
-    isRevealed("abertura"),
-    isRevealed("identificacao"),
-    isRevealed("atmosfera"),
-    isRevealed("proposito"),
-    isRevealed("peso"),
-    isRevealed("urgencia"),
-    isRevealed("final"),
-  ].filter(Boolean).length;
-
-  const temConteudoLiberado = blocosVisiveis > 0;
-
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <div
@@ -55,16 +42,13 @@ export function VSLPage() {
         <div className="mx-auto flex max-w-3xl flex-col gap-2">
           <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-[0.22em] text-white/38">
             <span>Jornada</span>
-            <span className="text-right">Assista para revelar</span>
+            <span className="text-right">Tudo após 1:40</span>
           </div>
           <ProgressBar value={progressPct} />
         </div>
       </div>
 
-      <CadastroGate
-        visivel={!cadastroLiberado}
-        temConteudoLiberado={temConteudoLiberado}
-      />
+      <CadastroGate visivel={!cadastroLiberado} />
 
       <main className="relative mx-auto max-w-3xl px-5 pb-32 pt-28 sm:px-8 sm:pb-40 sm:pt-32">
         <Hero
@@ -78,9 +62,6 @@ export function VSLPage() {
           {isRevealed("abertura") && <Abertura />}
           {isRevealed("identificacao") && <Identificacao />}
           {isRevealed("atmosfera") && <Atmosfera />}
-          {isRevealed("proposito") && (
-            <Proposito cadastroLiberado={cadastroLiberado} />
-          )}
           {isRevealed("peso") && <PesoEspiritual />}
           {isRevealed("urgencia") && (
             <Urgencia cadastroLiberado={cadastroLiberado} />

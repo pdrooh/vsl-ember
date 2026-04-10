@@ -2,10 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
+import { WHATSAPP_GROUP_URL } from "@/constants/communityLinks";
 import { trackEvent } from "@/lib/track";
-
-const WHATSAPP_GROUP_URL =
-  "https://chat.whatsapp.com/JPg3WCTxE70L3gWJ3Lwf06?mode=gi_t";
 
 const SHEET_MONKEY_FORM_URL =
   "https://api.sheetmonkey.io/form/51HzKw2qrQHXUEvKJGGAUH";

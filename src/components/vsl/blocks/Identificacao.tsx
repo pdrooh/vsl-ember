@@ -5,19 +5,18 @@ import { RevealSection } from "../RevealSection";
 import { staggerContainer, staggerItem } from "../motionVariants";
 
 const bullets = [
-  "sente que Deus está movendo algo neste tempo",
-  "percebe que uma nova estação se aproxima",
-  "quer permanecer sensível à voz do Senhor",
-  "não deseja ficar de fora do que será revelado",
-  "sabe que certos movimentos pedem prontidão, não pressa",
-  "quer ser avisada assim que tudo for liberado",
+  "Frequenta a igreja mas sente que falta algo mais profundo",
+  "Quer entender e operar nos dons do Espírito Santo",
+  "Deseja sair da teoria e experimentar o sobrenatural na prática",
+  "Está cansado de uma fé morna e quer mais de Deus",
+  "Quer crescer espiritualmente ao lado de uma comunidade que leva isso a sério",
 ];
 
 export function Identificacao() {
   return (
     <RevealSection className="mx-auto max-w-2xl">
       <h2 className="text-center font-serif text-2xl font-medium text-white sm:text-left sm:text-3xl">
-        Essa convocação é para você que…
+        Essa comunidade é para você que…
       </h2>
       <motion.ul
         className="mt-8 space-y-4"

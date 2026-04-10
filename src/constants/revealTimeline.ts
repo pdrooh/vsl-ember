@@ -1,13 +1,15 @@
-/** Frações da duração total do vídeo (base ~3 min) — adapta a qualquer comprimento. */
+/** Segundos assistidos a partir dos quais todo o texto + cadastro aparecem de uma vez. */
+export const REVEAL_ALL_AT_SEC = 100; // 1:40
+
+/** Ids usados por `isRevealed` (hero reservado; a página usa só os demais). */
 export const REVEAL_STEPS = [
-  { fraction: 0, id: "hero" },
-  { fraction: 20 / 180, id: "abertura" },
-  { fraction: 40 / 180, id: "identificacao" },
-  { fraction: 60 / 180, id: "atmosfera" },
-  { fraction: 90 / 180, id: "proposito" },
-  { fraction: 120 / 180, id: "peso" },
-  { fraction: 150 / 180, id: "urgencia" },
-  { fraction: 168 / 180, id: "final" },
+  { id: "hero" },
+  { id: "abertura" },
+  { id: "identificacao" },
+  { id: "atmosfera" },
+  { id: "peso" },
+  { id: "urgencia" },
+  { id: "final" },
 ] as const;
 
 export type RevealBlockId = (typeof REVEAL_STEPS)[number]["id"];
