@@ -25,6 +25,22 @@ type YtPlayer = {
   destroy: () => void;
 };
 
+type YtWindow = Window & {
+  YT: {
+    Player: new (
+      id: string,
+      options: {
+        videoId: string;
+        playerVars?: Record<string, string | number>;
+        events?: {
+          onReady?: (e: { target: YtPlayer }) => void;
+          onStateChange?: (e: { data: number; target: YtPlayer }) => void;
+        };
+      }
+    ) => YtPlayer;
+  };
+};
+
 function formatTime(totalSeconds: number): string {
   if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "0:00";
   const m = Math.floor(totalSeconds / 60);
@@ -120,21 +136,7 @@ export function YoutubeVideoPlayer({
         await loadYoutubeIframeApi();
         if (cancelled) return;
 
-        const w = window as Window & {
-          YT: {
-            Player: new (
-              id: string,
-              options: {
-                videoId: string;
-                playerVars?: Record<string, string | number>;
-                events?: {
-                  onReady?: (e: { target: YtPlayer }) => void;
-                  onStateChange?: (e: { data: number; target: YtPlayer }) => void;
-                };
-              }
-            ) => YtPlayer;
-          };
-        };
+        const w = window as unknown as YtWindow;
 
         created = new w.YT.Player(playerDomId, {
           videoId,
