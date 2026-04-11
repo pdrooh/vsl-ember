@@ -49,8 +49,18 @@ export function Hero({
         chegou ao fim. A revelação aconteceu. E agora, a porta está aberta.
       </p>
 
+      <div className="mx-auto mt-12 max-w-2xl">
+        <VideoPlayer
+          key={videoSrc}
+          src={videoSrc}
+          onTimeUpdate={onTimeUpdate}
+          onLoadedMetadata={onLoadedMetadata}
+          onEnded={onVideoEnded}
+        />
+      </div>
+
       {cadastroLiberado ? (
-        <div className="mx-auto mt-10 flex max-w-xl flex-col items-center gap-3">
+        <div className="mx-auto mt-10 flex max-w-xl flex-col items-center gap-3 sm:mt-12">
           {leadEnviado ? (
             <>
               <a
@@ -90,16 +100,6 @@ export function Hero({
           )}
         </div>
       ) : null}
-
-      <div className="mx-auto mt-12 max-w-2xl">
-        <VideoPlayer
-          key={videoSrc}
-          src={videoSrc}
-          onTimeUpdate={onTimeUpdate}
-          onLoadedMetadata={onLoadedMetadata}
-          onEnded={onVideoEnded}
-        />
-      </div>
     </header>
   );
 }

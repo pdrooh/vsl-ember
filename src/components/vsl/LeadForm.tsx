@@ -133,7 +133,7 @@ export function LeadForm({ onSuccess }: LeadFormProps) {
             disabled={status === "submitting"}
             className="mt-2 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-amber-700 via-[#c1693a] to-rose-600 px-8 py-4 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_12px_40px_-8px_rgba(193,105,58,0.45)] transition hover:brightness-110 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-55"
           >
-            {status === "submitting" ? "Enviando…" : "Quero ser avisada"}
+            {status === "submitting" ? "Enviando…" : "Quero fazer parte"}
           </button>
         </form>
       )}
