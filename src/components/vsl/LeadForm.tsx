@@ -8,7 +8,11 @@ import { trackEvent } from "@/lib/track";
 const SHEET_MONKEY_FORM_URL =
   "https://api.sheetmonkey.io/form/51HzKw2qrQHXUEvKJGGAUH";
 
-export function LeadForm() {
+type LeadFormProps = {
+  onSuccess?: () => void;
+};
+
+export function LeadForm({ onSuccess }: LeadFormProps) {
   const [status, setStatus] = useState<"idle" | "submitting" | "sent">("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -29,6 +33,7 @@ export function LeadForm() {
         nome: String(fd.get("nome") ?? "").slice(0, 80),
       });
       setStatus("sent");
+      onSuccess?.();
     } catch {
       setStatus("idle");
       setSubmitError("Não foi possível enviar. Verifique a conexão e tente de novo.");

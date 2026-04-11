@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useVideoProgress } from "@/hooks/useVideoProgress";
 import { Hero } from "./Hero";
 import { ProgressBar } from "./ProgressBar";
@@ -18,6 +19,7 @@ const VIDEO_SRC =
   process.env.NEXT_PUBLIC_VSL_URL?.trim() || DEFAULT_VSL_URL;
 
 export function VSLPage() {
+  const [leadEnviado, setLeadEnviado] = useState(false);
   const {
     handleTimeUpdate,
     handleLoadedMetadata,
@@ -53,6 +55,8 @@ export function VSLPage() {
       <main className="relative mx-auto max-w-3xl px-5 pb-32 pt-28 sm:px-8 sm:pb-40 sm:pt-32">
         <Hero
           videoSrc={VIDEO_SRC}
+          cadastroLiberado={cadastroLiberado}
+          leadEnviado={leadEnviado}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onVideoEnded={handleVideoEnded}
@@ -73,7 +77,7 @@ export function VSLPage() {
 
         {cadastroLiberado && (
           <div className="mt-20 sm:mt-28">
-            <LeadForm />
+            <LeadForm onSuccess={() => setLeadEnviado(true)} />
           </div>
         )}
       </main>

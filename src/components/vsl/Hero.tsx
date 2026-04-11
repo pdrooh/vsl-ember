@@ -6,13 +6,29 @@ import { trackEvent } from "@/lib/track";
 
 type HeroProps = {
   videoSrc: string;
+  cadastroLiberado: boolean;
+  leadEnviado: boolean;
   onTimeUpdate: React.ReactEventHandler<HTMLVideoElement>;
   onLoadedMetadata: React.ReactEventHandler<HTMLVideoElement>;
   onVideoEnded: React.ReactEventHandler<HTMLVideoElement>;
 };
 
+function scrollToCadastro(focusNome: boolean) {
+  document.getElementById("cadastro")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+  if (focusNome) {
+    setTimeout(() => {
+      document.querySelector<HTMLInputElement>("#cadastro-nome")?.focus();
+    }, 500);
+  }
+}
+
 export function Hero({
   videoSrc,
+  cadastroLiberado,
+  leadEnviado,
   onTimeUpdate,
   onLoadedMetadata,
   onVideoEnded,
@@ -33,22 +49,47 @@ export function Hero({
         chegou ao fim. A revelação aconteceu. E agora, a porta está aberta.
       </p>
 
-      <div className="mx-auto mt-10 flex max-w-xl flex-col items-center gap-3">
-        <a
-          href={WHATSAPP_GROUP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() =>
-            trackEvent("cta_click", { cta_label: "hero_whatsapp_comunidade" })
-          }
-          className="inline-flex w-full max-w-md items-center justify-center rounded-full bg-gradient-to-r from-amber-700 via-[#c1693a] to-rose-600 px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.1em] text-white shadow-[0_12px_40px_-8px_rgba(193,105,58,0.5)] transition hover:brightness-110 active:scale-[0.98] sm:text-sm sm:tracking-[0.12em]"
-        >
-          Quero entrar na comunidade agora
-        </a>
-        <p className="text-pretty text-sm leading-relaxed text-white/55">
-          O acesso é gratuito. Você será direcionada direto para o grupo.
-        </p>
-      </div>
+      {cadastroLiberado ? (
+        <div className="mx-auto mt-10 flex max-w-xl flex-col items-center gap-3">
+          {leadEnviado ? (
+            <>
+              <a
+                href={WHATSAPP_GROUP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  trackEvent("cta_click", {
+                    cta_label: "hero_whatsapp_comunidade",
+                  })
+                }
+                className="inline-flex w-full max-w-md items-center justify-center rounded-full bg-gradient-to-r from-amber-700 via-[#c1693a] to-rose-600 px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.1em] text-white shadow-[0_12px_40px_-8px_rgba(193,105,58,0.5)] transition hover:brightness-110 active:scale-[0.98] sm:text-sm sm:tracking-[0.12em]"
+              >
+                Quero entrar na comunidade agora
+              </a>
+              <p className="text-pretty text-sm leading-relaxed text-white/55">
+                O acesso é gratuito. Você será direcionada direto para o grupo.
+              </p>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  trackEvent("cta_click", { cta_label: "hero_ir_cadastro" });
+                  scrollToCadastro(true);
+                }}
+                className="inline-flex w-full max-w-md items-center justify-center rounded-full bg-gradient-to-r from-amber-700 via-[#c1693a] to-rose-600 px-6 py-4 text-center text-xs font-semibold uppercase tracking-[0.1em] text-white shadow-[0_12px_40px_-8px_rgba(193,105,58,0.5)] transition hover:brightness-110 active:scale-[0.98] sm:text-sm sm:tracking-[0.12em]"
+              >
+                Quero entrar na comunidade agora
+              </button>
+              <p className="text-pretty text-sm leading-relaxed text-white/55">
+                Preencha o cadastro abaixo. Após o envio, o link do grupo no
+                WhatsApp será liberado aqui e na confirmação.
+              </p>
+            </>
+          )}
+        </div>
+      ) : null}
 
       <div className="mx-auto mt-12 max-w-2xl">
         <VideoPlayer
