@@ -21,8 +21,8 @@ export function CadastroGate({ visivel }: CadastroGateProps) {
             Em 1 min 40 s
           </p>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-white/70">
-            Todo o conteúdo e o cadastro aparecem juntos nesse momento. Continue
-            com atenção até lá.
+            Texto completo e formulário da comunidade só liberam nesse instante do
+            vídeo. Continue assistindo até desbloquear.
           </p>
         </motion.div>
       )}
