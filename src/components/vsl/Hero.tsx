@@ -32,25 +32,15 @@ export function Hero({
 }: HeroProps) {
   return (
     <header className="relative z-10 mx-auto max-w-3xl text-center">
-      <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#c1693a]/40 bg-[#c1693a]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#e8a882]">
-        Comunidade Ember — 100% gratuita
-      </p>
-      <h1 className="font-serif text-[clamp(2.1rem,5.8vw,3.35rem)] font-medium leading-[1.1] tracking-tight text-white">
-        Assista ao vídeo para liberar seu acesso
+      <h1 className="font-serif text-[clamp(1.85rem,5vw,2.75rem)] font-medium leading-tight tracking-tight text-white">
+        Comunidade Ember — gratuita
       </h1>
-      <p className="mx-auto mt-5 max-w-xl font-serif text-xl font-normal leading-snug text-[#f5e6dc]/95 sm:text-2xl">
-        O restante da página e o formulário de entrada na comunidade só aparecem
-        depois que o vídeo atingir o momento combinado da jornada — por isso,
-        vale assistir com atenção, sem pular.
-      </p>
-      <p className="mx-auto mt-8 max-w-xl text-pretty font-sans text-base leading-[1.75] text-white/68 sm:text-[1.05rem] sm:leading-[1.8]">
-        A Ember é gratuita: não há mensalidade nem taxa para participar. O vídeo
-        abaixo explica o contexto e, ao avançar até o ponto certo, o cadastro e
-        todo o conteúdo complementar são desbloqueados automaticamente na mesma
-        tela.
+      <p className="mx-auto mt-4 max-w-md text-pretty text-sm leading-relaxed text-white/55 sm:text-[0.95rem]">
+        Assista ao vídeo: o cadastro e o restante da página liberam sozinhos no
+        tempo certo.
       </p>
 
-      <div className="mx-auto mt-12 max-w-2xl">
+      <div className="mx-auto mt-10 max-w-2xl sm:mt-12">
         <VideoPlayer
           key={videoSrc}
           src={videoSrc}
@@ -72,9 +62,8 @@ export function Hero({
           >
             Ir para o cadastro
           </button>
-          <p className="text-pretty text-sm leading-relaxed text-white/55">
-            Preencha o formulário abaixo. Ao enviar, abrimos a página de
-            confirmação com o link do grupo no WhatsApp.
+          <p className="text-pretty text-xs text-white/45 sm:text-sm">
+            Cadastro abaixo. Depois do envio, link do grupo na próxima página.
           </p>
         </div>
       ) : null}

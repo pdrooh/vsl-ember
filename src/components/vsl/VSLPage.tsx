@@ -4,7 +4,6 @@ import { useVideoProgress } from "@/hooks/useVideoProgress";
 import { Hero } from "./Hero";
 import { ProgressBar } from "./ProgressBar";
 import { LeadForm } from "./LeadForm";
-import { CadastroGate } from "./CadastroGate";
 import { Abertura } from "./blocks/Abertura";
 import { Identificacao } from "./blocks/Identificacao";
 import { Atmosfera } from "./blocks/Atmosfera";
@@ -47,8 +46,6 @@ export function VSLPage() {
           <ProgressBar value={progressPct} />
         </div>
       </div>
-
-      <CadastroGate visivel={!cadastroLiberado} />
 
       <main className="relative mx-auto max-w-3xl px-5 pb-32 pt-28 sm:px-8 sm:pb-40 sm:pt-32">
         <Hero
