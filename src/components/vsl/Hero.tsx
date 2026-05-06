@@ -33,11 +33,10 @@ export function Hero({
   return (
     <header className="relative z-10 mx-auto max-w-3xl text-center">
       <h1 className="font-serif text-[clamp(1.85rem,5vw,2.75rem)] font-medium leading-tight tracking-tight text-white">
-        Comunidade Ember — gratuita
+        Comunidade Ember - 100% Gratuita
       </h1>
       <p className="mx-auto mt-4 max-w-md text-pretty text-sm leading-relaxed text-white/55 sm:text-[0.95rem]">
-        Assista ao vídeo: o cadastro e o restante da página liberam sozinhos no
-        tempo certo.
+        Permaneça no vídeo para desbloquear sua jornada na Comunidade Ember.
       </p>
 
       <div className="mx-auto mt-10 max-w-2xl sm:mt-12">
