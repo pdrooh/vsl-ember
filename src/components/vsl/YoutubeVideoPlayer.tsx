@@ -74,6 +74,24 @@ export function YoutubeVideoPlayer({
   onLoadedMetadata,
   onEnded,
 }: YoutubeVideoPlayerProps) {
+  // Remount on src changes to reset local state without setState-in-effect.
+  return (
+    <YoutubeVideoPlayerInner
+      key={src}
+      src={src}
+      onTimeUpdate={onTimeUpdate}
+      onLoadedMetadata={onLoadedMetadata}
+      onEnded={onEnded}
+    />
+  );
+}
+
+function YoutubeVideoPlayerInner({
+  src,
+  onTimeUpdate,
+  onLoadedMetadata,
+  onEnded,
+}: YoutubeVideoPlayerProps) {
   const videoId = useMemo(() => extractYoutubeVideoId(src), [src]);
   const reactId = useId();
   const playerDomId = useMemo(
@@ -117,14 +135,10 @@ export function YoutubeVideoPlayer({
     furthestRef.current = 0;
     playedRef.current = false;
     durationRef.current = 0;
-    setDisplayTime(0);
-    setDisplayDuration(0);
-    setApiError(null);
     stopPoll();
     playerRef.current = null;
 
     if (!videoId) {
-      setApiError("URL do YouTube inválida");
       return;
     }
 

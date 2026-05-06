@@ -32,7 +32,7 @@ export function Hero({
 }: HeroProps) {
   return (
     <header className="relative z-10 mx-auto max-w-3xl text-center">
-      <h1 className="font-serif text-[clamp(1.85rem,5vw,2.75rem)] font-medium leading-tight tracking-tight text-white">
+      <h1 className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-serif text-[clamp(1.6rem,5vw,2.75rem)] font-medium leading-tight tracking-tight text-white">
         Comunidade Ember - 100% Gratuita
       </h1>
       <p className="mx-auto mt-4 max-w-md text-pretty text-sm leading-relaxed text-white/55 sm:text-[0.95rem]">
